@@ -32,25 +32,25 @@ import { socketContext, useSocket } from "@/providers/SocketContext";
 
 import { toast } from "react-toastify";
 
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { addGameHistory } from "@/lib/interactions/dataPoster";
+// import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+// import { addGameHistory } from "@/lib/interactions/dataPoster";
 import {
   addGameHistoryInput,
-  addGameHistoryResponse,
+  // addGameHistoryResponse,
   ChatMessage,
   Question,
 } from "@/lib/types";
-import { useMutation } from "@tanstack/react-query";
-import { useWarnIfUnsavedChanges } from "@/hooks/useWarnIfUnsavedChanges";
+// import { useMutation } from "@tanstack/react-query";
 
 export default function Page() {
-  const { isPending, mutate: mutate_addGameHistory } = useMutation<
-    addGameHistoryResponse,
-    Error,
-    addGameHistoryInput
-  >({
-    mutationFn: addGameHistory,
-  });
+  // const { isPending, mutate: mutate_addGameHistory } = useMutation<
+  //   addGameHistoryResponse,
+  //   Error,
+  //   addGameHistoryInput
+  // >({
+  //   mutationFn: addGameHistory,
+  // });
 
   const router = useRouter();
   const socket = useSocket();

@@ -13,31 +13,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Trophy,
-  Brain,
-  Settings,
-  User,
-  Users,
-  PersonStanding,
-  Loader2,
-} from "lucide-react";
+import { Trophy, Brain, Settings, User, Users, Loader2 } from "lucide-react";
 import { listTopPlayersReponse, recentGame, topPlayer } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { socketContext, useSocket } from "@/providers/SocketContext";
 import { listNGameHistory, listTopPlayers } from "@/lib/interactions/dataGeter";
 import Link from "next/link";
-import { todo } from "node:test";
+import { LineSpinnerAnimationComponent } from "@/components/line-spinner-animation";
 export default function Page() {
   const router = useRouter();
   const socket = useSocket();
 
-  const [userStats, setUserStats] = useState({
+  // const [userStats, setUserStats] = useState({
+  //   username: "AptitudeAce",
+  //   level: 15,
+  //   totalGames: 150,
+  //   winRate: 68,
+  // });
+
+  const userStats = {
     username: "AptitudeAce",
     level: 15,
     totalGames: 150,
     winRate: 68,
-  });
+  };
 
   // const leaderboard = [
   //   { rank: 1, username: "MindMaster", score: 2500 },
@@ -50,9 +49,10 @@ export default function Page() {
 
   const [leaderboard, setleaderboard] = useState<topPlayer[]>([]);
 
-  const [opponentAvatar, setOpponentAvatar] = useState(
-    "/placeholder.svg?height=80&width=80"
-  );
+  // const [opponentAvatar, setOpponentAvatar] = useState(
+  //   "/placeholder.svg?height=80&width=80"
+  // );
+  const opponentAvatar = "/placeholder.svg?height=80&width=80";
 
   // const {
   //   // isPending: isPending_insertUserInPool,
@@ -192,7 +192,7 @@ export default function Page() {
   }, [data]);
 
   useEffect(() => {
-    if (dataOfTopPlayers) {
+    if (dataOfTopPlayers && dataOfTopPlayers.data) {
       setleaderboard(
         dataOfTopPlayers.data.map((player, index) => ({
           rank: index + 1,
@@ -206,6 +206,9 @@ export default function Page() {
   const handleLogout = () => {
     // Add your logout logic here
     console.log("Logging out...");
+
+    cookie.remove("userToken");
+    router.push("/login");
   };
 
   return (
@@ -315,35 +318,37 @@ export default function Page() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
-                  {(recentGames.length == 0 || !recentGames) && (
-                    <li className="flex justify-between items-center bg-grey-700 text-white p-3 rounded-lg">
-                      No data available
-                    </li>
+                  {(!recentGames || recentGames.length == 0 || isLoading) && (
+                    // <li className="flex justify-between items-center bg-grey-700 text-white p-3 rounded-lg">
+                    //   No data available
+                    // </li>
+                    <LineSpinnerAnimationComponent></LineSpinnerAnimationComponent>
                   )}
-                  {recentGames.map((game, index) => (
-                    <li
-                      key={index}
-                      className="flex justify-between items-center bg-gray-700 p-3 rounded-lg"
-                    >
-                      <div>
-                        <span className="text-lg">{game.opponent}</span>
-                        <span className="text-sm text-blue-300 ml-2">
-                          ({game.mode})
-                        </span>
-                      </div>
-                      <span
-                        className={`text-lg font-bold ${
-                          game.result === "Won"
-                            ? "text-green-400"
-                            : game.result === "Lost"
-                            ? "text-red-400"
-                            : "text-yellow-400"
-                        }`}
+                  {recentGames &&
+                    recentGames.map((game, index) => (
+                      <li
+                        key={index}
+                        className="flex justify-between items-center bg-gray-700 p-3 rounded-lg"
                       >
-                        {game.result} ({game.score})
-                      </span>
-                    </li>
-                  ))}
+                        <div>
+                          <span className="text-lg">{game.opponent}</span>
+                          <span className="text-sm text-blue-300 ml-2">
+                            ({game.mode})
+                          </span>
+                        </div>
+                        <span
+                          className={`text-lg font-bold ${
+                            game.result === "Won"
+                              ? "text-green-400"
+                              : game.result === "Lost"
+                              ? "text-red-400"
+                              : "text-yellow-400"
+                          }`}
+                        >
+                          {game.result} ({game.score})
+                        </span>
+                      </li>
+                    ))}
                 </ul>
               </CardContent>
             </Card>
@@ -357,10 +362,11 @@ export default function Page() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
-                  {leaderboard.length == 0 && (
-                    <li className="flex justify-between items-center bg-grey-700 text-white p-3 rounded-lg">
-                      No data available
-                    </li>
+                  {(leaderboard.length == 0 || isLoading2) && (
+                    // <li className="flex justify-between items-center bg-grey-700 text-white p-3 rounded-lg">
+                    //   No data available
+                    // </li>
+                    <LineSpinnerAnimationComponent></LineSpinnerAnimationComponent>
                   )}
                   {leaderboard.map((player) => (
                     <li

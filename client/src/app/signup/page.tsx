@@ -6,7 +6,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Brain } from "lucide-react";
 
+import { useMutation } from "@tanstack/react-query";
+
+import { useRouter } from "next/navigation";
+import { registerUser } from "@/lib/interactions/dataPoster";
+
+type FormSchema = {
+  email: string;
+  username: string;
+  password: string;
+};
 export default function Page() {
+  const router = useRouter();
+  const { isPending, mutate } = useMutation({
+    mutationFn: registerUser,
+  });
+
+  function onSubmit(data: FormSchema) {
+    mutate(data, {
+      onSuccess: (data) => {
+        if (data.success) {
+          // toast({
+          //   title: "Success",
+          //   description: "Logged in successfully",
+          //   variant: "success",
+          // });
+          alert("added successfully");
+
+          router.push("/login");
+        } else {
+          // toast({
+          //   title: "Error",
+          //   description: data.message,
+          //   variant: "destructive",
+          // });
+          alert("Error: " + data.message);
+        }
+      },
+      onError(error) {
+        // toast({
+        //   title: "Error",
+        //   description: error.message,
+        //   variant: "destructive",
+        // });
+        alert("Error: " + error.message);
+      },
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
@@ -24,6 +71,16 @@ export default function Page() {
           className="mt-8 space-y-6 bg-gray-800 p-6 rounded-lg shadow-[0_0_15px_rgba(0,0,255,0.1)] backdrop-blur-sm bg-opacity-80"
           action="#"
           method="POST"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const data = {
+              email: formData.get("email") as string,
+              username: formData.get("username") as string,
+              password: formData.get("password") as string,
+            };
+            onSubmit(data);
+          }}
         >
           <div className="space-y-4 rounded-md shadow-sm">
             <div>

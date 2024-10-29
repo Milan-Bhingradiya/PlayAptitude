@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { addGameHistoryInput, addGameHistoryResponse, GameMappingResponse, getUserProfileReponse, insertIntoPoolResponse, LoginResponse, updateUserProfileInput } from "../types";
+import { addGameHistoryInput, addGameHistoryResponse, getUserProfileReponse, insertIntoPoolResponse, LoginResponse, registerResponse, updateUserProfileInput } from "../types";
 import { BASE_URL } from "../constants";
 import cookie from "js-cookie";
 
@@ -16,6 +16,22 @@ export async function loginUser(credentials: {
   } catch (error: AxiosError | unknown) {
     const err = error as AxiosError;
     return err.response?.data as LoginResponse;
+  }
+}
+export async function registerUser(credentials: {
+  email: string;
+  username: string;
+  password: string;
+}): Promise<registerResponse> {
+  try {
+    const { data } = await axios.post<registerResponse>(
+      `${BASE_URL}/register`,
+      credentials
+    );
+    return data;
+  } catch (error: AxiosError | unknown) {
+    const err = error as AxiosError;
+    return err.response?.data as registerResponse;
   }
 }
 
@@ -53,22 +69,22 @@ export async function deleteUserFromPool(): Promise<null> {
     return err.response?.data as null;
   }
 }
-export async function findOpponent(): Promise<GameMappingResponse> {
-  try {
-    const { data } = await axios.post<GameMappingResponse>(
-      `${BASE_URL}/findOpponent`, {},
-      {
-        headers: {
-          Authorization: `Bearer ${cookie.get("userToken")}`,
-        },
-      }
-    );
-    return data;
-  } catch (error: AxiosError | unknown) {
-    const err = error as AxiosError;
-    return err.response?.data as GameMappingResponse;
-  }
-}
+// export async function findOpponent(): Promise<GameMappingResponse> {
+//   try {
+//     const { data } = await axios.post<GameMappingResponse>(
+//       `${BASE_URL}/findOpponent`, {},
+//       {
+//         headers: {
+//           Authorization: `Bearer ${cookie.get("userToken")}`,
+//         },
+//       }
+//     );
+//     return data;
+//   } catch (error: AxiosError | unknown) {
+//     const err = error as AxiosError;
+//     return err.response?.data as GameMappingResponse;
+//   }
+// }
 // use less end
 
 export async function addGameHistory(inputdata: addGameHistoryInput): Promise<addGameHistoryResponse> {

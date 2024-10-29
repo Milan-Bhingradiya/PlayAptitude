@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:Milan@539539@localhost:5555/playaptitude?schema=public"
+  url      = env("DATABASE_URL")
 }
 
 model User {

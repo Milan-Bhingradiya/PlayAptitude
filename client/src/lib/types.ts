@@ -1,4 +1,4 @@
-import { EXPORT_DETAIL } from "next/dist/shared/lib/constants";
+// import { EXPORT_DETAIL } from "next/dist/shared/lib/constants";
 
 export interface BaseResponse {
   success: boolean;
@@ -8,6 +8,20 @@ export interface BaseResponse {
 export interface LoginResponse extends BaseResponse {
   data?: {
     token: string;
+  };
+}
+
+export interface registerResponse extends BaseResponse {
+  data?: {
+    username: string;
+    createdAt: string;
+    password: string;
+    img: string | null;
+    bio: string | null;
+    total_score: number | null;
+    num_of_games_won: number | null;
+    num_of_games_lost: number | null;
+
   };
 }
 export interface insertIntoPoolResponse extends BaseResponse {
@@ -65,6 +79,21 @@ export interface Reaction {
 }
 
 //
+
+export interface addGameHistoryResponse extends BaseResponse {
+
+  data: {
+    id: string;
+    player1Username: string;
+    player2Username: string;
+    player1Total: number;
+    player2Total: number;
+    player1Scores: number[];
+    player2Scores: number[];
+    winner: string;
+    playedAt: string;
+  }
+}
 export interface listNGameHistoryResponse extends BaseResponse {
   // id: string;
   // player1Username: string;
