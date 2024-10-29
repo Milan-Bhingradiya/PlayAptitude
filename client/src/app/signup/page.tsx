@@ -18,7 +18,7 @@ type FormSchema = {
 };
 export default function Page() {
   const router = useRouter();
-  const { isPending, mutate } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: registerUser,
   });
 

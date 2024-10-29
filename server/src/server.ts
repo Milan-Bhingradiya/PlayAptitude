@@ -234,8 +234,6 @@ io.on("connection", (socket) => {
     opponent_sid: string;
   }
 
-
-
   socket.on('send_message', (data: ChatMessageData) => {
     console.log('send_message', data);
     if (data.opponent_sid) {

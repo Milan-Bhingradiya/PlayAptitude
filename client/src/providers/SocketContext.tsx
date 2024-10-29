@@ -29,7 +29,7 @@ interface Props {
 export const SocketDataProvider = ({ children }: Props) => {
   const socket = useMemo(() => {
     console.log("connecting to socket");
-    return io.connect("http://localhost:8000");
+    return io("https://playaptitude-8c12786fd48c.herokuapp.com");
   }, []);
 
   const [opponent_socketId, setopponent_socketId] = useState("");

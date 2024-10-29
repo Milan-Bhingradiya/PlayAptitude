@@ -15,7 +15,7 @@ import { socketContext } from "@/providers/SocketContext";
 
 export default function Page() {
   const router = useRouter();
-  const { isPending, mutate } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: loginUser,
   });
 
@@ -157,7 +157,7 @@ export default function Page() {
         </form>
         <div className="text-center">
           <p className="mt-2 text-sm text-gray-400">
-            Don't have an account?{" "}
+            Don$apost have an account?{" "}
             <Link
               href="/signup"
               className="font-medium text-blue-400 hover:text-blue-300"

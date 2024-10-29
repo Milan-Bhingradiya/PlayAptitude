@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Brain } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Brain } from "lucide-react";
 
 export function Login() {
   return (
@@ -16,7 +16,11 @@ export function Login() {
           <h2 className="mt-6 text-3xl font-bold text-white">Welcome back</h2>
           <p className="mt-2 text-sm text-gray-400">Sign in to your account</p>
         </div>
-        <form className="mt-8 space-y-6 bg-gray-800 p-6 rounded-lg shadow-[0_0_15px_rgba(0,0,255,0.1)] backdrop-blur-sm bg-opacity-80" action="#" method="POST">
+        <form
+          className="mt-8 space-y-6 bg-gray-800 p-6 rounded-lg shadow-[0_0_15px_rgba(0,0,255,0.1)] backdrop-blur-sm bg-opacity-80"
+          action="#"
+          method="POST"
+        >
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
               <Label htmlFor="email-address" className="sr-only">
@@ -56,13 +60,19 @@ export function Login() {
                 type="checkbox"
                 className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
               />
-              <Label htmlFor="remember-me" className="ml-2 block text-sm text-gray-400">
+              <Label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-400"
+              >
                 Remember me
               </Label>
             </div>
 
             <div className="text-sm">
-              <Link href="#" className="font-medium text-blue-400 hover:text-blue-300">
+              <Link
+                href="#"
+                className="font-medium text-blue-400 hover:text-blue-300"
+              >
                 Forgot your password?
               </Link>
             </div>
@@ -79,13 +89,16 @@ export function Login() {
         </form>
         <div className="text-center">
           <p className="mt-2 text-sm text-gray-400">
-            Don't have an account?{" "}
-            <Link href="/signup" className="font-medium text-blue-400 hover:text-blue-300">
+            Don&apost have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-blue-400 hover:text-blue-300"
+            >
               Sign up
             </Link>
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }
