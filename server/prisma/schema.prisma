@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:Milan@539539@localhost:5555/playaptitude?schema=public"
+}
+
+model User {
+  username  String   @id // Using username as the primary key
+  createdAt DateTime @default(now())
+  password  String
+  // profile   Profile? // Establishing the relationship
+    img               String?
+  bio               String?
+  total_score             Int?// Total score across games
+  num_of_games_won  Int?
+  num_of_games_lost Int?
+
+  // Relations: One user can be part of many games as player1 or player2
+  gamesAsPlayer1 GameHistory[] @relation("Player1Games")
+  gamesAsPlayer2 GameHistory[] @relation("Player2Games")
+
+  GameHistory GameHistory[]
+}
+
+// model Profile {
+//   username          String @unique
+//   img               String
+//   bio               String
+//   score             Int // Total score across games
+//   num_of_games_won  Int
+//   num_of_games_lost Int
+//   rank              Int // Optional: Overall rank or level
+//   streak            Int? // Optional: Winning or losing streak (e.g., 3 wins in a row)
+//   user              User   @relation(fields: [username], references: [username]) // Establishing the relationship
+// }
+
+model GameHistory {
+  id              String   @unique @default(uuid()) // Unique game ID
+  player1Username String // Foreign key for player 1 (referencing username)
+  player2Username String // Foreign key for player 2 (referencing username)
+  player1Total    Int
+  player2Total    Int
+  player1Scores   Int[]
+  player2Scores   Int[]
+  winner          String?
+  playedAt        DateTime @default(now())
+
+  // Relations to User model via username
+  player1    User  @relation("Player1Games", fields: [player1Username], references: [username])
+  player2    User  @relation("Player2Games", fields: [player2Username], references: [username])
+  winnerUser User? @relation(fields: [winner], references: [username])
+
+  @@index([player1Username])
+  @@index([player2Username])
+  @@index([winner])
+}
+
+// model Pool {
+//   id             String   @id @default(uuid())
+//   userId         String   @unique // Refers to User
+//   interestedMode String? // Optional: Mode user is interested in (e.g., Math, Science, etc.)
+//   joinedAt       DateTime @default(now()) // Timestamp when user joined the pool
+// }
+
+// model GameMapping {
+//   id        String @id @default(uuid())
+//   player1Id String // Refers to User (player 1)
+//   player2Id String // Refers to User (player 2)
+
+//   player1Total Int // Total correct answers by player 1
+//   player2Total Int // Total correct answers by player 2
+
+//   player1Scores Int[] // Array to store scores per round for player 1
+//   player2Scores Int[] // Array to store scores per round for player 2
+
+//   winner       String? // Stores winner's user ID after the game
+//   currentRound Int     @default(1) // Tracks the current round of the game
+
+//   player1WantStop Boolean @default(false)
+//   player2WantStop Boolean @default(false)
+
+//   player1Ready Boolean @default(false) // Indicates if player 1 is ready for the next round
+//   player2Ready Boolean @default(false) // Indicates if player 2 is ready for the next round
+
+//   isCompleted Boolean @default(false) // Marks if the game has ended
+
+//   createdAt DateTime @default(now())
+// }
+model Leaderboard {
+  id          String @id @default(uuid())
+  userId      String @unique // Refers to User
+  rank        Int
+  totalWins   Int
+  totalLosses Int
+  score       Int
+}
