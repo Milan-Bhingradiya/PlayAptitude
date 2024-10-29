@@ -3,7 +3,7 @@ import app from "./app";
 import { createServer } from "http"; // For creating an HTTP server
 import { Server } from "socket.io";
 import cors from "cors";
-import { UniqueArray } from "../src/utils/util";
+import UniqueArray from "./utils/util";
 import { jwt_to_id } from "./utils/jwt";
 
 import prisma from "./utils/prisma_connected";

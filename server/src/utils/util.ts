@@ -1,4 +1,4 @@
-export class UniqueArray<T> {
+export default class UniqueArray<T> {
   private set: Set<T>;
   private array: T[];
 
