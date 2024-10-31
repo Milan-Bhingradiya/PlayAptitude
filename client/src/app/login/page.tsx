@@ -60,7 +60,6 @@ export default function Page() {
     });
   }
   useEffect(() => {
-    console.log("useefffect");
     const token = cookie.get("userToken");
     if (!token) {
       cookie.set("centralTPOToken", "");
@@ -70,6 +69,7 @@ export default function Page() {
       }, 500);
     }
   }, [router]);
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>

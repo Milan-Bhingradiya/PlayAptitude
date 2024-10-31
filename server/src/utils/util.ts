@@ -1,6 +1,6 @@
-export default class UniqueArray<T> {
-  private set: Set<T>;
-  private array: T[];
+export class UniqueArray<T> {
+  public set: Set<T>;
+  public array: T[];
 
   constructor() {
     this.set = new Set<T>();  // To ensure uniqueness

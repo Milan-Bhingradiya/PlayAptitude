@@ -3,21 +3,14 @@ import app from "./app";
 import { createServer } from "http"; // For creating an HTTP server
 import { Server } from "socket.io";
 import cors from "cors";
-import UniqueArray from "./utils/util";
+import { UniqueArray } from "./utils/util";
 import { jwt_to_id } from "./utils/jwt";
 
 import prisma from "./utils/prisma_connected";
 const port = process.env.PORT || 8000;
 
-// app.use(cors({
-//   origin: "*", // You can also specify allowed origins here like ['http://example.com']
-//   methods: ["GET", "POST"],
-// }));
-
-// Create HTTP server with Express
 const httpServer = createServer(app);
 
-// Initialize Socket.io server
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
@@ -93,6 +86,9 @@ io.on("connection", (socket) => {
     io.emit("message", data);
   });
 
+  //------------------------------------------
+  //           user_join_pool           
+  //-------------------------------------------
   socket.on("user_join_pool", async (data) => {
     const username = jwt_to_id(data.jwt);
     console.log(`user_join_pool`, username);
@@ -106,36 +102,35 @@ io.on("connection", (socket) => {
         username: true,
       },
     });
-    console.log("data222222222222");
-    console.log(data2);
+
     const userName = data2?.username;
     userName_to_socketId.set(userName, socket.id);
     socketId_to_userName.set(socket.id, userName);
 
     pooluserName.add(userName!.toString());
-    // get random userid from map
-    console.log("nes user joinpool ", userName, " ", pooluserName.size());
+    // get random userId from map
+    console.log("nes user joinPool ", userName, " ", pooluserName.size());
     if (pooluserName.size() > 1) {
       const randomIndex = Math.floor(Math.random() * pooluserName.size());
 
-      let randomuserName = pooluserName.get(randomIndex);
+      let randomUserName = pooluserName.get(randomIndex);
 
-      // Ensure randomuserName is not the same as userName
-      if (randomuserName === userName!.toString()) {
+      // Ensure randomUserName is not the same as userName
+      if (randomUserName === userName!.toString()) {
         // If it is, get the next user in the map
         const userNames = Array.from(userName_to_socketId.keys());
         const nextIndex = (randomIndex + 1) % userNames.length;
-        randomuserName = pooluserName.get(nextIndex);
+        randomUserName = pooluserName.get(nextIndex);
       }
 
-      if (randomuserName) {
-        const randomSocketId = userName_to_socketId.get(randomuserName);
+      if (randomUserName) {
+        const randomSocketId = userName_to_socketId.get(randomUserName);
         if (randomSocketId) {
           // delete both users from map
-          userName_to_socketId.delete(randomuserName);
+          userName_to_socketId.delete(randomUserName);
           userName_to_socketId.delete(userName);
           // create game mapping
-          pooluserName.remove(randomuserName);
+          pooluserName.remove(randomUserName);
           pooluserName.remove(userName!.toString());
 
           // start game
@@ -144,7 +139,7 @@ io.on("connection", (socket) => {
             socketId: socket.id,
           });
           io.to(socket.id).emit("started_game", {
-            userName: randomuserName,
+            userName: randomUserName,
             socketId: randomSocketId,
           });
 
@@ -164,6 +159,9 @@ io.on("connection", (socket) => {
     }
   });
 
+  //------------------------------------------
+  //           user_leave_pool           
+  //-------------------------------------------
   socket.on("user_leave_pool", (data) => {
     console.log("remove user from pool", `${data.jwt}`);
     const userName = jwt_to_id(data.jwt);
@@ -173,24 +171,32 @@ io.on("connection", (socket) => {
     pooluserName.remove(userName!.toString());
   });
 
+  //------------------------------------------
+  //           time_stop           
+  //-------------------------------------------
   socket.on("time_stop", (data) => {
     console.log("time stop", data);
     io.to(data.to_socketId).emit("time_stop", { message: "time stop" });
   });
 
+  //------------------------------------------
+  //           stop_timer           
+  //-------------------------------------------
   socket.on("stop_timer", (data) => {
     console.log("stop timer", data);
 
     if (data.opponent_sid) {
-      console.log("andar ");
       io.to(data.opponent_sid).emit("opponent_stopped_timer");
     }
   });
 
+  //------------------------------------------
+  //           both_players_stopped_timer           
+  //-------------------------------------------
   socket.on("both_players_stopped_timer", (data) => {
     console.log("both_players_stopped_timer", data);
 
-    // data.socketId is opponent socekt id
+    // data.socketId is opponent Socket id
 
     if (data.opponent_sid) {
       io.to(socket.id).emit("timer_stopped");
@@ -198,6 +204,9 @@ io.on("connection", (socket) => {
     }
   });
 
+  //------------------------------------------
+  //           resume_timer           
+  //-------------------------------------------
   socket.on("resume_timer", (data) => {
     console.log("resume_timer");
     if (data.opponent_sid) {
@@ -206,6 +215,9 @@ io.on("connection", (socket) => {
     }
   });
 
+  //------------------------------------------
+  //           answer_submitted           
+  //-------------------------------------------
   socket.on("answer_submitted",
     (data: { score: number; timeSpent: number; opponent_sid: string }) => {
       console.log("answer_submitted", data);
@@ -218,6 +230,9 @@ io.on("connection", (socket) => {
     }
   );
 
+  //------------------------------------------
+  //           game_over           
+  //-------------------------------------------
   socket.on("game_over", (finalScore: number) => {
     // console.log("game_over", finalScore);
     // const opponentSocketId = getOpponentSocketId(socket.id);
@@ -234,6 +249,9 @@ io.on("connection", (socket) => {
     opponent_sid: string;
   }
 
+  //------------------------------------------
+  //           send_message           
+  //-------------------------------------------
   socket.on('send_message', (data: ChatMessageData) => {
     console.log('send_message', data);
     if (data.opponent_sid) {
@@ -242,6 +260,9 @@ io.on("connection", (socket) => {
 
   });
 
+  //------------------------------------------
+  //           disconnect           
+  //-------------------------------------------
   socket.on("disconnect", () => {
     console.log("disconnect");
     const userId = socketId_to_userName.get(socket.id);

@@ -1,12 +1,12 @@
 "use client";
-import { useRouter } from "next/navigation"; // Correct import for App Router
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/login"); // Navigates to /another-page
+    router.push("/login");
   }, [router]);
 
   return (

@@ -21,22 +21,16 @@ import { listNGameHistory, listTopPlayers } from "@/lib/interactions/dataGeter";
 import Link from "next/link";
 import { LineSpinnerAnimationComponent } from "@/components/line-spinner-animation";
 export default function Page() {
+  const socket_data_provider = useContext(socketContext);
   const router = useRouter();
   const socket = useSocket();
 
-  // const [userStats, setUserStats] = useState({
-  //   username: "AptitudeAce",
-  //   level: 15,
-  //   totalGames: 150,
-  //   winRate: 68,
-  // });
-
-  const userStats = {
-    username: "AptitudeAce",
+  const [userStats, setUserStats] = useState({
+    username: "",
     level: 15,
     totalGames: 150,
     winRate: 68,
-  };
+  });
 
   // const leaderboard = [
   //   { rank: 1, username: "MindMaster", score: 2500 },
@@ -190,6 +184,15 @@ export default function Page() {
       setrecentGames(data.data);
     }
   }, [data]);
+
+  useEffect(() => {
+    setUserStats({
+      username: socket_data_provider?.myUserName || "",
+      level: userStats.level,
+      totalGames: userStats.totalGames,
+      winRate: userStats.winRate,
+    });
+  }, [socket_data_provider?.myUserName, userStats]);
 
   useEffect(() => {
     if (dataOfTopPlayers && dataOfTopPlayers.data) {
