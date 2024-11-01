@@ -13,6 +13,7 @@ import { listNGameHistory } from "./contoller/gameHistory/listNGameHistory";
 import { listTopPlayers } from "./contoller/gameHistory/listTopPlayer";
 import { updateUserProfile } from "./contoller/profile/updateUserProfile";
 import { getUserProfile } from "./contoller/profile/getUserProfile";
+
 const app = express();
 
 
