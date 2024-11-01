@@ -1,18 +1,18 @@
 import express, { json, urlencoded } from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { register } from "./contoller/auth/register";
-import { login } from "./contoller/auth/login";
+import { register } from "./controller/auth/register";
+import { login } from "./controller/auth/login";
 import { verifyToken } from "./utils/jwt";
 // import { insertIntoPool } from "./contoller/pool/insert";
 // import { deleteFromPool } from "./contoller/pool/delete";
 // import { findOpponent } from "./contoller/pool/search";
 // import { listPoolUsers } from "./contoller/pool/listPoolUsers";
-import { addGameHistory } from "./contoller/gameHistory/addGameHistory";
-import { listNGameHistory } from "./contoller/gameHistory/listNGameHistory";
-import { listTopPlayers } from "./contoller/gameHistory/listTopPlayer";
-import { updateUserProfile } from "./contoller/profile/updateUserProfile";
-import { getUserProfile } from "./contoller/profile/getUserProfile";
+import { addGameHistory } from "./controller/gameHistory/addGameHistory";
+import { listNGameHistory } from "./controller/gameHistory/listNGameHistory";
+import { listTopPlayers } from "./controller/gameHistory/listTopPlayer";
+import { updateUserProfile } from "./controller/profile/updateUserProfile";
+import { getUserProfile } from "./controller/profile/getUserProfile";
 
 const app = express();
 
