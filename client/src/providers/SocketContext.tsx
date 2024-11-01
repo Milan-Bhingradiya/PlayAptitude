@@ -12,6 +12,9 @@ interface SocketContextType {
   opponent_userName: string;
   setMyUserName: (name: string) => void;
   myUserName: string;
+  is_iam_webRtcInitiator: boolean;
+
+  setis_iam_webRtcInitiator: (value: boolean) => void;
 }
 
 // Create the socket context
@@ -29,12 +32,17 @@ interface Props {
 export const SocketDataProvider = ({ children }: Props) => {
   const socket = useMemo(() => {
     console.log("connecting to socket");
-    return io("https://playaptitude-8c12786fd48c.herokuapp.com");
+    return io(
+      process.env.NEXT_PUBLIC_BASE_URL ??
+        "https://playaptitude-8c12786fd48c.herokuapp.com"
+    );
   }, []);
 
   const [opponent_socketId, setopponent_socketId] = useState("");
   const [opponent_userName, setopponent_userName] = useState("");
   const [myUserName, setMyUserName] = useState("");
+
+  const [is_iam_webRtcInitiator, setis_iam_webRtcInitiator] = useState(false);
 
   const set_opponent_socketId = (id: string) => {
     setopponent_socketId(id);
@@ -50,6 +58,8 @@ export const SocketDataProvider = ({ children }: Props) => {
         setopponent_userName,
         myUserName,
         setMyUserName,
+        is_iam_webRtcInitiator,
+        setis_iam_webRtcInitiator,
       }}
     >
       {children}

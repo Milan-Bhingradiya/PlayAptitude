@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           user_join_pool           
+  //           user_join_pool
   //-------------------------------------------
   socket.on("user_join_pool", async (data) => {
     const username = jwt_to_id(data.jwt);
@@ -137,10 +137,16 @@ io.on("connection", (socket) => {
           io.to(randomSocketId).emit("started_game", {
             userName,
             socketId: socket.id,
+            webRtcInitiator: false,
           });
+
+          // bijo join thay e chhe aa,(bijo(opponent) chhe em lagse nay code joy ne but still it is...)
+          // but aya na perpective thi aj first player lagse..
+          // why this is second  because this join when pool >1
           io.to(socket.id).emit("started_game", {
             userName: randomUserName,
             socketId: randomSocketId,
+            webRtcInitiator: true,
           });
 
           // send 1st que
@@ -160,7 +166,7 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           user_leave_pool           
+  //           user_leave_pool
   //-------------------------------------------
   socket.on("user_leave_pool", (data) => {
     console.log("remove user from pool", `${data.jwt}`);
@@ -168,11 +174,11 @@ io.on("connection", (socket) => {
     console.log("remove user from pool", userName);
     console.log("remove user from pool", userName);
     // userName_to_socketId.delete(userName);
-    pooluserName.remove(userName!.toString());
+    pooluserName.remove(userName?.toString());
   });
 
   //------------------------------------------
-  //           time_stop           
+  //           time_stop
   //-------------------------------------------
   socket.on("time_stop", (data) => {
     console.log("time stop", data);
@@ -180,7 +186,7 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           stop_timer           
+  //           stop_timer
   //-------------------------------------------
   socket.on("stop_timer", (data) => {
     console.log("stop timer", data);
@@ -191,7 +197,7 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           both_players_stopped_timer           
+  //           both_players_stopped_timer
   //-------------------------------------------
   socket.on("both_players_stopped_timer", (data) => {
     console.log("both_players_stopped_timer", data);
@@ -205,7 +211,7 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           resume_timer           
+  //           resume_timer
   //-------------------------------------------
   socket.on("resume_timer", (data) => {
     console.log("resume_timer");
@@ -216,9 +222,10 @@ io.on("connection", (socket) => {
   });
 
   //------------------------------------------
-  //           answer_submitted           
+  //           answer_submitted
   //-------------------------------------------
-  socket.on("answer_submitted",
+  socket.on(
+    "answer_submitted",
     (data: { score: number; timeSpent: number; opponent_sid: string }) => {
       console.log("answer_submitted", data);
 
@@ -231,7 +238,7 @@ io.on("connection", (socket) => {
   );
 
   //------------------------------------------
-  //           game_over           
+  //           game_over
   //-------------------------------------------
   socket.on("game_over", (finalScore: number) => {
     // console.log("game_over", finalScore);
@@ -250,18 +257,60 @@ io.on("connection", (socket) => {
   }
 
   //------------------------------------------
-  //           send_message           
+  //           send_message
   //-------------------------------------------
-  socket.on('send_message', (data: ChatMessageData) => {
-    console.log('send_message', data);
+  socket.on("send_message", (data: ChatMessageData) => {
+    console.log("send_message", data);
     if (data.opponent_sid) {
-      io.to(data.opponent_sid).emit('receive_message', data);
+      io.to(data.opponent_sid).emit("receive_message", data);
     }
-
   });
 
   //------------------------------------------
-  //           disconnect           
+  //           WEBRTC
+  //-------------------------------------------
+
+  socket.on("call:user", (data: { to: string; offer: any }) => {
+    const { to, offer } = data;
+    console.log("call-user:", data);
+
+    // user 1 pase thi aya-aya thi icomming call to user 2
+    setTimeout(() => {
+      io.to(to).emit("incomming:call", { from: socket.id, offer });
+    }, 1000);
+  });
+
+  socket.on(
+    "call:accepted",
+    (data: { to: string; answer: RTCSessionDescriptionInit }) => {
+      const { to, answer } = data;
+      console.log("call:accepted:", data);
+      if (!answer || !answer.type || !answer.sdp) {
+        console.error("Invalid answer received:", answer);
+      }
+      io.to(to).emit("call:accepted", { from: socket.id, answer });
+    }
+  );
+
+  socket.on(
+    "peer:nego:needed",
+    (data: { to: string; offer: RTCIceCandidate }) => {
+      const { to, offer } = data;
+      console.log("peer:nego:needed:", data);
+      io.to(to).emit("peer:nego:needed", { from: socket.id, offer });
+    }
+  );
+
+  socket.on(
+    "peer:nego:done",
+    (data: { to: string; answer: RTCIceCandidate }) => {
+      const { to, answer } = data;
+      io.to(to).emit("peer:nego:final", { from: socket.id, answer });
+    }
+  );
+
+  //------------------------------------------
+  //           disconnect
   //-------------------------------------------
   socket.on("disconnect", () => {
     console.log("disconnect");

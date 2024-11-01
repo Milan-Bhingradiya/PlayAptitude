@@ -138,10 +138,17 @@ export default function Page() {
   // }, [isSearching]);
 
   useEffect(() => {
-    const handleGameStart = (data: { userName: string; socketId: string }) => {
+    const handleGameStart = (data: {
+      userName: string;
+      socketId: string;
+      webRtcInitiator: boolean;
+    }) => {
+      console.log("Game started with: ", data);
       webSocket_dataprovider?.set_opponent_socketId(data.socketId);
       webSocket_dataprovider?.setopponent_userName(data.userName);
+      webSocket_dataprovider?.setis_iam_webRtcInitiator(data.webRtcInitiator);
       setis_opponent_found(true);
+
       setTimeout(() => {
         router.push("/game");
       }, 3000);
@@ -192,7 +199,12 @@ export default function Page() {
       totalGames: userStats.totalGames,
       winRate: userStats.winRate,
     });
-  }, [socket_data_provider?.myUserName, userStats]);
+  }, [
+    socket_data_provider?.myUserName,
+    userStats.level,
+    userStats.totalGames,
+    userStats.winRate,
+  ]);
 
   useEffect(() => {
     if (dataOfTopPlayers && dataOfTopPlayers.data) {

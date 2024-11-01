@@ -37,20 +37,24 @@ import { useRouter } from "next/navigation";
 // import { addGameHistory } from "@/lib/interactions/dataPoster";
 import {
   addGameHistoryInput,
+  addGameHistoryResponse,
   // addGameHistoryResponse,
   ChatMessage,
   Question,
 } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
+import { addGameHistory } from "@/lib/interactions/dataPoster";
+import peerServiceInstance from "@/service/peer";
 // import { useMutation } from "@tanstack/react-query";
 
 export default function Page() {
-  // const { isPending, mutate: mutate_addGameHistory } = useMutation<
-  //   addGameHistoryResponse,
-  //   Error,
-  //   addGameHistoryInput
-  // >({
-  //   mutationFn: addGameHistory,
-  // });
+  const { mutate: mutate_addGameHistory } = useMutation<
+    addGameHistoryResponse,
+    Error,
+    addGameHistoryInput
+  >({
+    mutationFn: addGameHistory,
+  });
 
   const router = useRouter();
   const socket = useSocket();
@@ -81,6 +85,10 @@ export default function Page() {
   // for chat
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  // for avtar mic
+  const [isOurMicOn, setIsOurMicOn] = useState(false);
+  const [isOpponentMicOn, setIsOpponentMicOn] = useState(false);
 
   useEffect(() => {
     if (!isTimeStopped) {
@@ -114,18 +122,40 @@ export default function Page() {
         toast("You lose!");
       }
 
-      const gameData: addGameHistoryInput = {
-        player1Total: userScore,
-        player2Username: socketProvider?.opponent_userName || "",
-        player2Total: opponentScore,
-        player1Scores: [userScore],
-        player2Scores: [opponentScore],
-      };
+      // const gameData: addGameHistoryInput = {
+      //   player1Total: userScore,
+      //   player2Username: socketProvider?.opponent_userName || "",
+      //   player2Total: opponentScore,
+      //   player1Scores: [userScore],
+      //   player2Scores: [opponentScore],
+      // };
 
-      console.log("gamedata ");
-      console.log(gameData);
+      // console.log("gamedata ");
+      // console.log(gameData);
 
       if (userScore > opponentScore) {
+        mutate_addGameHistory(
+          {
+            player1Total: userScore,
+            player2Username: socketProvider?.opponent_userName || "",
+            player2Total: opponentScore,
+            player1Scores: userScoreArr,
+            player2Scores: opponentScoreArr,
+          },
+          {
+            onSuccess: (data: addGameHistoryResponse) => {
+              if (data.success) {
+                alert("Game history added");
+              } else {
+                alert("Error: " + data.message);
+              }
+            },
+            onError: (error) => {
+              alert("Error: " + error.message);
+            },
+          }
+        );
+
         alert("You win!");
       } else {
         alert("You lose!");
@@ -136,11 +166,14 @@ export default function Page() {
     }
   }, [
     currentQuestionIndex,
+    mutate_addGameHistory,
     opponentScore,
+    opponentScoreArr,
     router,
     socket,
     socketProvider?.opponent_userName,
     userScore,
+    userScoreArr,
   ]);
 
   useEffect(() => {
@@ -229,9 +262,6 @@ export default function Page() {
   ]);
 
   useEffect(() => {
-    // console.log("anyone ans give");
-    // console.log("userAnswered: " + userAnswered);
-    // console.log("opponentAnswer: " + opponentAnswered);
     if (userAnswered && opponentAnswered) {
       handleNextQuestion();
     }
@@ -306,62 +336,191 @@ export default function Page() {
     }
   }, [chatMessages]); // Trigger scroll on new messages
 
-  // save gaem history on go to back or close tab
+  // make webrtc connection
 
-  // useEffect(() => {
-  //   console.log("vahe gayooooooooooooooooooooooooooooooooooooooooooooooooo");
-  //   console.log("vahe gayooooooooooooooooooooooooooooooooooooooooooooooooo");
-  //   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  //     // Call your API function here
+  const callUser = useCallback(async () => {
+    if (socketProvider?.is_iam_webRtcInitiator) {
+      console.log("calll user");
+      const offer = await peerServiceInstance.getOffer();
+      socket.emit("call:user", {
+        to: socketProvider?.opponent_socketId,
+        from: socketProvider?.socket.id,
+        offer: offer,
+      });
+    }
+    console.log("calll user end");
+  }, [socket, socketProvider]);
+  useEffect(() => {
+    // call user if i am intiotiar
 
-  //     mutate_addGameHistory(
-  //       {
-  //         player1Total: userScore,
-  //         player2Username: socketProvider?.opponent_userName || "",
-  //         player2Total: opponentScore,
-  //         player1Scores: userScoreArr,
-  //         player2Scores: opponentScoreArr,
-  //       },
-  //       {
-  //         onSuccess: (data: addGameHistoryResponse) => {
-  //           if (data.success) {
-  //             alert("Game history added");
-  //           } else {
-  //             alert("Error: " + data.message);
-  //           }
-  //         },
-  //         onError: (error) => {
-  //           alert("Error: " + error.message);
-  //         },
-  //       }
-  //     );
+    callUser();
+  }, [callUser]);
 
-  //     // Prevent the default behavior to show a confirmation dialog
-  //     event.preventDefault();
-  //     event.returnValue = ""; // For legacy browsers
-  //   };
+  const handleIncomingCall = useCallback(
+    async (data: { from: string; offer: RTCSessionDescriptionInit }) => {
+      console.log("incoming call from ", data.from, "offer : ", data);
 
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
+      const answer = await peerServiceInstance.getAnswer(data.offer);
+      setTimeout(() => {
+        socket.emit("call:accepted", { to: data.from, answer: answer });
+      }, 1000);
+    },
+    [socket]
+  );
 
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //   };
-  // }, [
-  //   mutate_addGameHistory,
-  //   opponentScore,
-  //   socketProvider?.opponent_userName,
-  //   opponentScoreArr,
-  //   userScore,
-  //   userScoreArr,
-  // ]);
+  const handleCallAccepted = useCallback(
+    async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
+      peerServiceInstance.setlocalDescription(data.answer);
+      console.log("call accepted from ", data.from);
+    },
+    []
+  );
 
-  // Basic route change detection
+  const handleNegotiationIncoming = useCallback(
+    async (data: { from: string; offer: RTCSessionDescriptionInit }) => {
+      console.log("Negotiation needed from ", data.from);
+
+      const answer = await peerServiceInstance.getAnswer(data.offer);
+      socket.emit("peer:nego:done", { to: data.from, answer: answer });
+    },
+    [socket]
+  );
+
+  const handleNegotiationFinal = useCallback(
+    async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
+      console.log("Negotiation final from ", data.from);
+      peerServiceInstance.setlocalDescription(data.answer);
+    },
+    []
+  );
+
+  useEffect(() => {
+    socket.on("incomming:call", handleIncomingCall);
+    socket.on("call:accepted", handleCallAccepted);
+    socket.on("peer:nego:needed", handleNegotiationIncoming);
+    socket.on("peer:nego:final", handleNegotiationFinal);
+    return () => {
+      socket.off("incomming:call", handleIncomingCall);
+      socket?.off("call:accepted", handleCallAccepted);
+      socket.off("peer:nego:needed", handleNegotiationIncoming);
+      socket.off("peer:nego:final", handleNegotiationFinal);
+    };
+  }, [
+    handleCallAccepted,
+    handleIncomingCall,
+    handleNegotiationFinal,
+    handleNegotiationIncoming,
+    socket,
+  ]);
+
+  const [status, setStatus] = useState("Not Connected");
+
+  useEffect(() => {
+    // Update status based on the connection state
+    const updateStatus = () => {
+      switch (peerServiceInstance.peer.connectionState) {
+        case "new":
+          setStatus("Starting connection...");
+          break;
+        case "connecting":
+          setStatus("Connecting...");
+          break;
+        case "connected":
+          setStatus("Connected");
+          break;
+        case "disconnected":
+          setStatus("Disconnected");
+          break;
+        case "failed":
+          setStatus("Connection failed");
+          break;
+        case "closed":
+          setStatus("Connection closed");
+          break;
+        default:
+          setStatus("Unknown status");
+      }
+    };
+
+    // Attach event listener for connection state change
+    peerServiceInstance.peer.addEventListener(
+      "connectionstatechange",
+      updateStatus
+    );
+
+    // Cleanup on component unmount
+    return () => {
+      peerServiceInstance.peer.removeEventListener(
+        "connectionstatechange",
+        updateStatus
+      );
+    };
+  }, []);
+
+  //------------------------------------------
+  //           my audio
+  //-------------------------------------------
+  // const [myMediaStream, setmyMediaStream] = useState<MediaStream | null>(null);
+  const [remoteMediaStream, setremoteMediaStream] =
+    useState<MediaStream | null>(null);
+
+  const addMediaStream = useCallback(async () => {
+    // Start capturing the media stream
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+
+    // setmyMediaStream(stream);
+    // console.log("Added");
+
+    // Add the tracks from the stream to the existing peer connection
+    for (const track of stream.getTracks()) {
+      peerServiceInstance.peer.addTrack(track, stream);
+    }
+  }, []);
+
+  //------------------------------------------
+  //           remote audio handle
+  //-------------------------------------------
+  const handleGetRemoteDataStream = useCallback((event: RTCTrackEvent) => {
+    const remotestream = event.streams[0];
+    console.log("remote audio ", remotestream);
+    setremoteMediaStream(remotestream);
+  }, []);
+
+  useEffect(() => {
+    // Add the track event listener to get the remote stream
+    peerServiceInstance.peer.addEventListener(
+      "track",
+      handleGetRemoteDataStream
+    );
+
+    return () => {
+      peerServiceInstance.peer.removeEventListener(
+        "track",
+        handleGetRemoteDataStream
+      );
+    };
+  }, [handleGetRemoteDataStream]);
+
+  useEffect(() => {
+    // Connect the remote stream to the audio element whenever it changes
+    const audioElement = document.getElementById(
+      "remoteAudio"
+    ) as HTMLAudioElement;
+    if (audioElement && remoteMediaStream) {
+      audioElement.srcObject = remoteMediaStream;
+      audioElement.play();
+    }
+  }, [remoteMediaStream]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
       <div className="relative z-10 max-w-4xl mx-auto">
         <div className="flex justify-between items-start mb-8">
+          {/* Remote audio playback */}
+          <audio id="remoteAudio" autoPlay playsInline controls />
           {/* Player's avatar */}
           <div className="flex items-center space-x-2">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-900">
@@ -375,16 +534,60 @@ export default function Page() {
               <p className="font-bold">You</p>
               <p className="font-bold">{userScore}</p>
 
-              <MicOff className="w-5 h-5 inline-block text-red-400" />
+              {isOurMicOn ? (
+                <div
+                  onClick={() => {
+                    setIsOurMicOn(false);
+                  }}
+                >
+                  <Mic className="w-5 h-5 inline-block text-green-400" />
+                </div>
+              ) : (
+                <div
+                  onClick={() => {
+                    setIsOurMicOn(true);
+                  }}
+                >
+                  <MicOff className="w-5 h-5 inline-block text-red-400" />7
+                </div>
+              )}
             </div>
           </div>
+
+          <p>Status: {status}</p>
+          <button onClick={() => callUser()}> call</button>
+          <button
+            className="btn bg-blue-300"
+            onClick={() => {
+              addMediaStream();
+            }}
+          >
+            {" "}
+            on mic{" "}
+          </button>
 
           {/* Opponent's avatar */}
           <div className="flex items-center space-x-2">
             <div className="text-right">
               <p className="font-bold">Opponent</p>
               <p className="font-bold">{opponentScore}</p>
-              <Mic className="w-5 h-5 inline-block text-green-400" />
+              {isOpponentMicOn ? (
+                <div
+                  onClick={() => {
+                    setIsOpponentMicOn(false);
+                  }}
+                >
+                  <Mic className="w-5 h-5 inline-block text-green-400" />
+                </div>
+              ) : (
+                <div
+                  onClick={() => {
+                    setIsOpponentMicOn(true);
+                  }}
+                >
+                  <MicOff className="w-5 h-5 inline-block text-red-400" />
+                </div>
+              )}
             </div>
             <Avatar className="w-16 h-16 ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-900">
               <AvatarImage
