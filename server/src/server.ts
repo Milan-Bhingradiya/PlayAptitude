@@ -137,7 +137,8 @@ io.on("connection", (socket) => {
           io.to(randomSocketId).emit("started_game", {
             userName,
             socketId: socket.id,
-            webRtcInitiator: false,
+            // false hatu
+            webRtcInitiator: true,
           });
 
           // bijo join thay e chhe aa,(bijo(opponent) chhe em lagse nay code joy ne but still it is...)
@@ -279,7 +280,7 @@ io.on("connection", (socket) => {
       io.to(to).emit("incomming:call", { from: socket.id, offer });
     }, 1000);
   });
-4231
+  4231
   socket.on(
     "call:accepted",
     (data: { to: string; answer: RTCSessionDescriptionInit }) => {

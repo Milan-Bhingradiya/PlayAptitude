@@ -422,67 +422,71 @@ export default function Page() {
     socket,
   ]);
 
-  const [status, setStatus] = useState("Not Connected");
+  // const [status, setStatus] = useState("Not Connected");
 
-  useEffect(() => {
-    // Update status based on the connection state
-    const updateStatus = () => {
-      if (!peerServiceInstance.peer) {
-        setStatus("Peer connection not initialized");
-        return;
-      }
-      switch (peerServiceInstance.peer.connectionState) {
-        case "new":
-          setStatus("Starting connection...");
-          break;
-        case "connecting":
-          setStatus("Connecting...");
-          break;
-        case "connected":
-          setStatus("Connected");
-          break;
-        case "disconnected":
-          setStatus("Disconnected");
-          break;
-        case "failed":
-          setStatus("Connection failed");
-          break;
-        case "closed":
-          setStatus("Connection closed");
-          break;
-        default:
-          setStatus("Unknown status");
-      }
-    };
+  // useEffect(() => {
+  //   // Update status based on the connection state
+  //   const updateStatus = () => {
+  //     if (!peerServiceInstance.peer) {
+  //       setStatus("Peer connection not initialized");
+  //       return;
+  //     }
+  //     switch (peerServiceInstance.peer.connectionState) {
+  //       case "new":
+  //         setStatus("Starting connection...");
+  //         break;
+  //       case "connecting":
+  //         setStatus("Connecting...");
+  //         break;
+  //       case "connected":
+  //         setStatus("Connected");
+  //         break;
+  //       case "disconnected":
+  //         setStatus("Disconnected");
+  //         break;
+  //       case "failed":
+  //         setStatus("Connection failed");
+  //         break;
+  //       case "closed":
+  //         setStatus("Connection closed");
+  //         break;
+  //       default:
+  //         setStatus("Unknown status");
+  //     }
+  //   };
 
-    // Attach event listener for connection state change
-    if (peerServiceInstance.peer) {
-      peerServiceInstance.peer.addEventListener(
-        "connectionstatechange",
-        updateStatus
-      );
-    }
+  //   // Attach event listener for connection state change
+  //   if (peerServiceInstance.peer) {
+  //     peerServiceInstance.peer.addEventListener(
+  //       "connectionstatechange",
+  //       updateStatus
+  //     );
+  //   }
 
-    // Cleanup on component unmount
-    return () => {
-      if (peerServiceInstance.peer) {
-        peerServiceInstance.peer.removeEventListener(
-          "connectionstatechange",
-          updateStatus
-        );
-      }
-    };
-  }, []);
+  //   // Cleanup on component unmount
+  //   return () => {
+  //     if (peerServiceInstance.peer) {
+  //       peerServiceInstance.peer.removeEventListener(
+  //         "connectionstatechange",
+  //         updateStatus
+  //       );
+  //     }
+  //   };
+  // }, []);
 
   //------------------------------------------
   //           my audio
   //-------------------------------------------
   // const [myMediaStream, setmyMediaStream] = useState<MediaStream | null>(null);
-  const [remoteMediaStream, setremoteMediaStream] =
-    useState<MediaStream | null>(null);
+  // const [remoteMediaStream, setremoteMediaStream] =
+  // useState<MediaStream | null>(null);
 
   const addMediaStream = useCallback(async () => {
     // Start capturing the media stream
+    console.log("try to send audio ");
+    // Adding a slight delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
     });
@@ -493,6 +497,7 @@ export default function Page() {
     // Add the tracks from the stream to the existing peer connection
     for (const track of stream.getTracks()) {
       if (peerServiceInstance.peer) {
+        console.log("try to send track");
         peerServiceInstance.peer.addTrack(track, stream);
       }
     }
@@ -503,39 +508,36 @@ export default function Page() {
   //-------------------------------------------
   const handleGetRemoteDataStream = useCallback((event: RTCTrackEvent) => {
     const remotestream = event.streams[0];
-    console.log("remote audio ", remotestream);
-    setremoteMediaStream(remotestream);
+    console.log("remote audio getting ", remotestream);
+    alert("remote audio getting");
+    // setremoteMediaStream(remotestream);
+    const audioElement = new Audio();
+    audioElement.srcObject = remotestream;
+    audioElement.play();
   }, []);
 
   useEffect(() => {
-    // Add the track event listener to get the remote stream
-    if (peerServiceInstance.peer) {
-      peerServiceInstance.peer.addEventListener(
-        "track",
-        handleGetRemoteDataStream
-      );
+    const peer = peerServiceInstance.peer;
+    if (peer) {
+      peer.ontrack = handleGetRemoteDataStream;
     }
 
     return () => {
-      if (peerServiceInstance.peer) {
-        peerServiceInstance.peer.removeEventListener(
-          "track",
-          handleGetRemoteDataStream
-        );
+      if (peer) {
+        peer.ontrack = null;
       }
     };
   }, [handleGetRemoteDataStream]);
-
-  useEffect(() => {
-    // Connect the remote stream to the audio element whenever it changes
-    const audioElement = document.getElementById(
-      "remoteAudio"
-    ) as HTMLAudioElement;
-    if (audioElement && remoteMediaStream) {
-      audioElement.srcObject = remoteMediaStream;
-      audioElement.play();
-    }
-  }, [remoteMediaStream]);
+  // useEffect(() => {
+  //   // Connect the remote stream to the audio element whenever it changes
+  //   const audioElement = document.getElementById(
+  //     "remoteAudio"
+  //   ) as HTMLAudioElement;
+  //   if (audioElement && remoteMediaStream) {
+  //     audioElement.srcObject = remoteMediaStream;
+  //     audioElement.play();
+  //   }
+  // }, [remoteMediaStream]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-8 relative overflow-hidden">
@@ -543,7 +545,7 @@ export default function Page() {
       <div className="relative z-10 max-w-4xl mx-auto">
         <div className="flex justify-between items-start mb-8">
           {/* Remote audio playback */}
-          <audio id="remoteAudio" autoPlay playsInline controls />
+          {/* <audio id="remoteAudio" autoPlay playsInline controls /> */}
           {/* Player's avatar */}
           <div className="flex items-center space-x-2">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-900">
@@ -577,7 +579,6 @@ export default function Page() {
             </div>
           </div>
 
-          <p>Status: {status}</p>
           <button onClick={() => callUser()}> call</button>
           <button
             className="btn bg-blue-300"

@@ -16,8 +16,6 @@ import { getUserProfile } from "./controller/profile/getUserProfile";
 
 const app = express();
 
-
-
 app.use(express.json({ limit: '10mb' })); // Set limit as needed
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
