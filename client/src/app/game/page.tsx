@@ -91,6 +91,15 @@ export default function Page() {
   const [isOpponentMicOn, setIsOpponentMicOn] = useState(false);
 
   useEffect(() => {
+    // The peer will auto-initialize on the client side
+
+    return () => {
+      // Clean up when component unmounts
+      peerServiceInstance.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isTimeStopped) {
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
@@ -370,7 +379,7 @@ export default function Page() {
 
   const handleCallAccepted = useCallback(
     async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
-      peerServiceInstance.setlocalDescription(data.answer);
+      peerServiceInstance.setLocalDescription(data.answer);
       console.log("call accepted from ", data.from);
     },
     []
@@ -389,7 +398,7 @@ export default function Page() {
   const handleNegotiationFinal = useCallback(
     async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
       console.log("Negotiation final from ", data.from);
-      peerServiceInstance.setlocalDescription(data.answer);
+      peerServiceInstance.setLocalDescription(data.answer);
     },
     []
   );
@@ -418,6 +427,10 @@ export default function Page() {
   useEffect(() => {
     // Update status based on the connection state
     const updateStatus = () => {
+      if (!peerServiceInstance.peer) {
+        setStatus("Peer connection not initialized");
+        return;
+      }
       switch (peerServiceInstance.peer.connectionState) {
         case "new":
           setStatus("Starting connection...");
@@ -443,17 +456,21 @@ export default function Page() {
     };
 
     // Attach event listener for connection state change
-    peerServiceInstance.peer.addEventListener(
-      "connectionstatechange",
-      updateStatus
-    );
-
-    // Cleanup on component unmount
-    return () => {
-      peerServiceInstance.peer.removeEventListener(
+    if (peerServiceInstance.peer) {
+      peerServiceInstance.peer.addEventListener(
         "connectionstatechange",
         updateStatus
       );
+    }
+
+    // Cleanup on component unmount
+    return () => {
+      if (peerServiceInstance.peer) {
+        peerServiceInstance.peer.removeEventListener(
+          "connectionstatechange",
+          updateStatus
+        );
+      }
     };
   }, []);
 
@@ -475,7 +492,9 @@ export default function Page() {
 
     // Add the tracks from the stream to the existing peer connection
     for (const track of stream.getTracks()) {
-      peerServiceInstance.peer.addTrack(track, stream);
+      if (peerServiceInstance.peer) {
+        peerServiceInstance.peer.addTrack(track, stream);
+      }
     }
   }, []);
 
@@ -490,16 +509,20 @@ export default function Page() {
 
   useEffect(() => {
     // Add the track event listener to get the remote stream
-    peerServiceInstance.peer.addEventListener(
-      "track",
-      handleGetRemoteDataStream
-    );
-
-    return () => {
-      peerServiceInstance.peer.removeEventListener(
+    if (peerServiceInstance.peer) {
+      peerServiceInstance.peer.addEventListener(
         "track",
         handleGetRemoteDataStream
       );
+    }
+
+    return () => {
+      if (peerServiceInstance.peer) {
+        peerServiceInstance.peer.removeEventListener(
+          "track",
+          handleGetRemoteDataStream
+        );
+      }
     };
   }, [handleGetRemoteDataStream]);
 
