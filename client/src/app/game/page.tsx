@@ -360,10 +360,10 @@ export default function Page() {
     console.log("calll user end");
   }, [socket, socketProvider]);
 
-  useEffect(() => {
-    // call user if i am intitiator
-    callUser();
-  }, [callUser]);
+  // useEffect(() => {
+  //   // call user if i am intitiator
+  //   callUser();
+  // }, [callUser]);
 
   const handleIncomingCall = useCallback(
     async (data: { from: string; offer: RTCSessionDescriptionInit }) => {
@@ -432,13 +432,13 @@ export default function Page() {
   const addMediaStream = useCallback(async () => {
     console.log("Attempting to send audio");
     try {
+      callUser();
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
       for (const track of stream.getTracks()) {
         peerServiceInstance.peer?.addTrack(track, stream);
       }
-      callUser();
     } catch (error) {
       console.error("Error accessing microphone: ", error);
     }
@@ -450,11 +450,11 @@ export default function Page() {
   const handleGetRemoteDataStream = useCallback((event: RTCTrackEvent) => {
     const remotestream = event.streams[0];
     console.log("remote audio getting ", remotestream);
-    alert("remote audio getting");
     // setremoteMediaStream(remotestream);
     const audioElement = new Audio();
     audioElement.srcObject = remotestream;
     audioElement.play();
+    alert("remote audio getting");
   }, []);
 
   useEffect(() => {
