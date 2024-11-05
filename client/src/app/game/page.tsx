@@ -501,7 +501,9 @@ export default function Page() {
         peerServiceInstance.peer.addTrack(track, stream);
       }
     }
-  }, []);
+
+    callUser();
+  }, [callUser]);
 
   //------------------------------------------
   //           remote audio handle
