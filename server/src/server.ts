@@ -280,7 +280,7 @@ io.on("connection", (socket) => {
       io.to(to).emit("incomming:call", { from: socket.id, offer });
     }, 1000);
   });
-  4231
+
   socket.on(
     "call:accepted",
     (data: { to: string; answer: RTCSessionDescriptionInit }) => {

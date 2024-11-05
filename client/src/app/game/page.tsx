@@ -359,9 +359,9 @@ export default function Page() {
     }
     console.log("calll user end");
   }, [socket, socketProvider]);
-  useEffect(() => {
-    // call user if i am intiotiar
 
+  useEffect(() => {
+    // call user if i am intitiator
     callUser();
   }, [callUser]);
 
@@ -422,58 +422,6 @@ export default function Page() {
     socket,
   ]);
 
-  // const [status, setStatus] = useState("Not Connected");
-
-  // useEffect(() => {
-  //   // Update status based on the connection state
-  //   const updateStatus = () => {
-  //     if (!peerServiceInstance.peer) {
-  //       setStatus("Peer connection not initialized");
-  //       return;
-  //     }
-  //     switch (peerServiceInstance.peer.connectionState) {
-  //       case "new":
-  //         setStatus("Starting connection...");
-  //         break;
-  //       case "connecting":
-  //         setStatus("Connecting...");
-  //         break;
-  //       case "connected":
-  //         setStatus("Connected");
-  //         break;
-  //       case "disconnected":
-  //         setStatus("Disconnected");
-  //         break;
-  //       case "failed":
-  //         setStatus("Connection failed");
-  //         break;
-  //       case "closed":
-  //         setStatus("Connection closed");
-  //         break;
-  //       default:
-  //         setStatus("Unknown status");
-  //     }
-  //   };
-
-  //   // Attach event listener for connection state change
-  //   if (peerServiceInstance.peer) {
-  //     peerServiceInstance.peer.addEventListener(
-  //       "connectionstatechange",
-  //       updateStatus
-  //     );
-  //   }
-
-  //   // Cleanup on component unmount
-  //   return () => {
-  //     if (peerServiceInstance.peer) {
-  //       peerServiceInstance.peer.removeEventListener(
-  //         "connectionstatechange",
-  //         updateStatus
-  //       );
-  //     }
-  //   };
-  // }, []);
-
   //------------------------------------------
   //           my audio
   //-------------------------------------------
@@ -482,28 +430,19 @@ export default function Page() {
   // useState<MediaStream | null>(null);
 
   const addMediaStream = useCallback(async () => {
-    // Start capturing the media stream
-    console.log("try to send audio ");
-    // Adding a slight delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
-
-    // setmyMediaStream(stream);
-    // console.log("Added");
-
-    // Add the tracks from the stream to the existing peer connection
-    for (const track of stream.getTracks()) {
-      if (peerServiceInstance.peer) {
-        console.log("try to send track");
-        peerServiceInstance.peer.addTrack(track, stream);
+    console.log("Attempting to send audio");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+      for (const track of stream.getTracks()) {
+        peerServiceInstance.peer?.addTrack(track, stream);
       }
+      callUser();
+    } catch (error) {
+      console.error("Error accessing microphone: ", error);
     }
-
-    callUser();
-  }, [callUser]);
+  }, []);
 
   //------------------------------------------
   //           remote audio handle
@@ -530,17 +469,6 @@ export default function Page() {
       }
     };
   }, [handleGetRemoteDataStream]);
-
-  // useEffect(() => {
-  //   // Connect the remote stream to the audio element whenever it changes
-  //   const audioElement = document.getElementById(
-  //     "remoteAudio"
-  //   ) as HTMLAudioElement;
-  //   if (audioElement && remoteMediaStream) {
-  //     audioElement.srcObject = remoteMediaStream;
-  //     audioElement.play();
-  //   }
-  // }, [remoteMediaStream]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-8 relative overflow-hidden">
