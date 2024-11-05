@@ -485,7 +485,7 @@ export default function Page() {
     // Start capturing the media stream
     console.log("try to send audio ");
     // Adding a slight delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -528,6 +528,7 @@ export default function Page() {
       }
     };
   }, [handleGetRemoteDataStream]);
+
   // useEffect(() => {
   //   // Connect the remote stream to the audio element whenever it changes
   //   const audioElement = document.getElementById(
