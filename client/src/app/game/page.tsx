@@ -457,6 +457,17 @@ export default function Page() {
     }
   }, []);
 
+  const removeMediaStream = useCallback(async () => {
+    console.log("Attempting to remove audio");
+    const stream = peerServiceInstance.peer?.getSenders();
+    if (stream) {
+      stream.forEach((track) => {
+        console.log("Removing track from peer: ", track);
+        peerServiceInstance.peer?.removeTrack(track);
+      });
+    }
+  }, []);
+
   //------------------------------------------
   //           remote audio handle
   //-------------------------------------------
@@ -517,7 +528,11 @@ export default function Page() {
         <div className="flex justify-between items-start mb-8">
           {/* Remote audio playback */}
           {/* <audio id="remoteAudio" autoPlay playsInline controls /> */}
-          <audio ref={audioRef} autoPlay controls />
+          <audio ref={audioRef} hidden autoPlay controls />
+          {/* <button onClick={() => audioRef.current && audioRef.current.play()}>
+            Play Audio
+          </button> */}
+
           {/* Player's avatar */}
           <div className="flex items-center space-x-2">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-900">
@@ -535,6 +550,7 @@ export default function Page() {
                 <div
                   onClick={() => {
                     setIsOurMicOn(false);
+                    removeMediaStream();
                   }}
                 >
                   <Mic className="w-5 h-5 inline-block text-green-400" />
@@ -543,6 +559,7 @@ export default function Page() {
                 <div
                   onClick={() => {
                     setIsOurMicOn(true);
+                    addMediaStream();
                   }}
                 >
                   <MicOff className="w-5 h-5 inline-block text-red-400" />7
