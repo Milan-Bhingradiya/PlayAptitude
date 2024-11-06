@@ -91,15 +91,6 @@ export default function Page() {
   const [isOpponentMicOn, setIsOpponentMicOn] = useState(false);
 
   useEffect(() => {
-    // The peer will auto-initialize on the client side
-
-    return () => {
-      // Clean up when component unmounts
-      peerServiceInstance.destroy();
-    };
-  }, []);
-
-  useEffect(() => {
     if (!isTimeStopped) {
       const timer = setInterval(() => {
         setTimeLeft((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
@@ -379,11 +370,19 @@ export default function Page() {
 
   const handleCallAccepted = useCallback(
     async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
-      peerServiceInstance.setLocalDescription(data.answer);
+      peerServiceInstance.setlocalDescription(data.answer);
       console.log("call accepted from ", data.from);
     },
     []
   );
+
+  const handleNegoNeeded = useCallback(async () => {
+    const offer = await peerServiceInstance.getOffer();
+    socket.emit("peer:nego:needed", {
+      offer,
+      to: socketProvider?.opponent_socketId,
+    });
+  }, [socket, socketProvider?.opponent_socketId]);
 
   const handleNegotiationIncoming = useCallback(
     async (data: { from: string; offer: RTCSessionDescriptionInit }) => {
@@ -398,10 +397,23 @@ export default function Page() {
   const handleNegotiationFinal = useCallback(
     async (data: { from: string; answer: RTCSessionDescriptionInit }) => {
       console.log("Negotiation final from ", data.from);
-      peerServiceInstance.setLocalDescription(data.answer);
+      peerServiceInstance.setlocalDescription(data.answer);
     },
     []
   );
+
+  useEffect(() => {
+    peerServiceInstance.peer.addEventListener(
+      "negotiationneeded",
+      handleNegoNeeded
+    );
+    return () => {
+      peerServiceInstance.peer.removeEventListener(
+        "negotiationneeded",
+        handleNegoNeeded
+      );
+    };
+  }, [handleNegoNeeded]);
 
   useEffect(() => {
     socket.on("incomming:call", handleIncomingCall);
@@ -432,11 +444,12 @@ export default function Page() {
   const addMediaStream = useCallback(async () => {
     console.log("Attempting to send audio");
     try {
-      callUser();
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
       for (const track of stream.getTracks()) {
+        console.log("Adding track to peer: ", track);
+        console.log(peerServiceInstance.peer);
         peerServiceInstance.peer?.addTrack(track, stream);
       }
     } catch (error) {
@@ -447,6 +460,7 @@ export default function Page() {
   //------------------------------------------
   //           remote audio handle
   //-------------------------------------------
+
   const handleGetRemoteDataStream = useCallback((event: RTCTrackEvent) => {
     const remotestream = event.streams[0];
     console.log("remote audio getting ", remotestream);
@@ -470,6 +484,32 @@ export default function Page() {
     };
   }, [handleGetRemoteDataStream]);
 
+  useEffect(() => {
+    if (peerServiceInstance.peer) {
+      peerServiceInstance.peer.ontrack = (event) => {
+        const remoteAudio = new Audio();
+        remoteAudio.srcObject = event.streams[0];
+        remoteAudio.play();
+      };
+    }
+  }, []);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  useEffect(() => {
+    peerServiceInstance.peer.addEventListener("track", async (ev) => {
+      const remoteStream = ev.streams[0];
+      console.log("GOT TRACKS!!", ev.streams[0].getTracks());
+
+      if (audioRef.current && remoteStream) {
+        // Set the srcObject of the audio element to the remote stream
+        audioRef.current.srcObject = remoteStream;
+        audioRef.current.play().catch((error) => {
+          console.error("Failed to play audio:", error);
+        });
+      }
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-4 md:p-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
@@ -477,6 +517,7 @@ export default function Page() {
         <div className="flex justify-between items-start mb-8">
           {/* Remote audio playback */}
           {/* <audio id="remoteAudio" autoPlay playsInline controls /> */}
+          <audio ref={audioRef} autoPlay controls />
           {/* Player's avatar */}
           <div className="flex items-center space-x-2">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400 ring-offset-2 ring-offset-gray-900">
@@ -509,7 +550,6 @@ export default function Page() {
               )}
             </div>
           </div>
-
           <button onClick={() => callUser()}> call</button>
           <button
             className="btn bg-blue-300"
@@ -520,7 +560,7 @@ export default function Page() {
             {" "}
             on mic{" "}
           </button>
-
+          {/* <audio id="remoteAudio" autoPlay></audio> */}
           {/* Opponent's avatar */}
           <div className="flex items-center space-x-2">
             <div className="text-right">
