@@ -1,14 +1,32 @@
+"use client";
 class Peerservice {
-  peer: RTCPeerConnection = new RTCPeerConnection({
-    iceServers: [
-      {
-        urls: [
-          "stun:stun.l.google.com:19302",
-          "stun:global.stun.twilio.com:3478",
-        ], // Google STUN server
-      },
-    ],
-  });
+
+  public peer: RTCPeerConnection | null = null;
+
+  constructor() {
+    // Only initialize if we're in the browser
+    if (typeof window !== 'undefined') {
+      this.initializePeer();
+    }
+  }
+
+  private initializePeer() {
+    try {
+      this.peer = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: [
+              "stun:stun.l.google.com:19302",
+              "stun:global.stun.twilio.com:3478",
+            ],
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Failed to initialize RTCPeerConnection:", error);
+    }
+  }
+
 
   async getOffer() {
     if (this.peer) {

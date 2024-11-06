@@ -403,12 +403,12 @@ export default function Page() {
   );
 
   useEffect(() => {
-    peerServiceInstance.peer.addEventListener(
+    peerServiceInstance.peer?.addEventListener(
       "negotiationneeded",
       handleNegoNeeded
     );
     return () => {
-      peerServiceInstance.peer.removeEventListener(
+      peerServiceInstance.peer?.removeEventListener(
         "negotiationneeded",
         handleNegoNeeded
       );
@@ -496,7 +496,7 @@ export default function Page() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
-    peerServiceInstance.peer.addEventListener("track", async (ev) => {
+    peerServiceInstance.peer?.addEventListener("track", async (ev) => {
       const remoteStream = ev.streams[0];
       console.log("GOT TRACKS!!", ev.streams[0].getTracks());
 
